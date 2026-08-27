@@ -1,68 +1,72 @@
-import requests
-from bs4 import BeautifulSoup
-import time
-
-#Variaveis Globais
-TOKEN = '8724511737:AAGGCJfn-7qVOl8ozjMc-L-YyEDaR3uVLt4'
-CHAT_ID = '8920592138'
-URL = 'https://www.amazon.com.br/Adaptador-Display-Wireless-Espelhamento-Celular/dp/B0H85CZKQ8/ref=sr_1_3?__mk_pt_BR=%C3%85M%C3%85%C5%BD%C3%95%C3%91&crid=5NH7EO6X7I8O&dib=eyJ2IjoiMSJ9.ShOQnT7pcli9bQdNFc2Ah2p2jo_NUnV4yKv3bU1LsPaQLBnRdFZbz9rCKA9lFharQtbYy7rYPLMsFRJ-wtnx_m8wvaD5_-9vklSJe-n9Uf-LRUgT7k7QAwBS862roiLQH_j4B_c1BpGXXd6jQUukR7hjdSyege615H8qVYt4N7dwSs-tANLbcVGnoldggzhXugWF4GYTlP0c0F6RyG8YuB_YsDfPx-uDxMg8BX_QKbnMDjsnihRV85rgIm4ynuCbnQljVmIxRQYiU3Fss09s3J-OPoN_YE2iT40xijTz4SE.Bi7QsjUfXY1vAfm6AuCmm5I1Vi-E8ry01SeI_HMyAtA&dib_tag=se&keywords=hdmi+wireless&qid=1787630580&sprefix=hdmi+wirele%2Caps%2C242&sr=8-3&ufe=app_do%3Aamzn1.fos.db68964d-7c0e-4bb2-a95c-e5cb9e32eb12'
-PrecoDesejavel = 280
-
-def telegramMensage(mensagem):
-    url =  'https://api.telegram.org/bot%s/sendMessage' % TOKEN
-    dados = {'chat_id': CHAT_ID, 'text': mensagem}
-    requests.post(url, data=dados)
-
-def conferir_preco():
-    headers = {'UserAgent': 'Mobizilla/5.0 (X11; Linux x86_64)'}
-
-    #baixa o conteudo e coloca na variavel respota
-    resposta = requests.get(URL, headers=headers)
-
-    #organiza o texto html de resposta e armazena em soup
-    soup = BeautifulSoup(resposta.text, "html.parser")
-
-    # procura (soup.find) o preco nas linhas(div) com tipo(classe) especifico do Mercado Livre
-    elemento_preco = soup.find("div", class_="ui-pdp-price__second-line")
-
-    if not elemento_preco:
-        # jeito alternativo do primeiro
-        elemento_preco = soup.find("span", class_="andes-money-amount--main")
-
-    if elemento_preco:
-
-        # pega o texto de elemento_preco e o trata para virar um float
-        texto_limpo = elemento_preco.text.replace(".", "").replace(",", ".").strip()
-
-        #transforma em float
-        preco_atual = float(texto_limpo)
-
-        print('Preço checado: R$ %s' %preco_atual)
+import pygame
+import sys
 
 
-        if preco_atual <= PrecoDesejavel:
-            telegramMensage(f" ALERTA DE PROMOÇÃO!\nO produto baixou para R$ {preco_atual}\nLink: {URL}")
-            return True  # Sinaliza que encontrou a promoção
+LarguraPixel= 800
+AlturaPixel = 600
+Grade = 8
+TamSquare = 60 # Tamanho de cada célula do tabuleiro
 
-    else:
-        print('Não foi possivel localizar a página')
+# Centraliza o tabuleiro na tela
+EixoX = (LarguraPixel - (Grade * TamSquare)) // 2
+EixoY = (AlturaPixel - (Grade * TamSquare)) // 2
 
-    return False
+# Cores (R, G, B)
+CorFundo = (20, 20, 30)       # Azul escuro
+CorLinha = (100, 100, 120)    # Cinza para a grade
+CorGrama = (40, 60, 40)       # Verde escuro para o fundo do grid
+CorG1 = (100, 255, 100) # Verde brilhante
+CorG2 = (100, 100, 255) # Azul brilhante
+CorLixo = (150, 100, 50)      # Marrom para o rastro
+CorText = (255, 255, 255)    # Branco
 
-def main():
-    print('Funcionou a main')
-    achou_promocao = False
+pygame.init()
+Tela = pygame.display.set_mode((LarguraPixel, AlturaPixel))
+pygame.display.set_caption("Corrida Guaxinim - G1 vs G2")
+Relogio = pygame.time.Clock()
 
-    while achou_promocao == False:
-        achou_promocao = conferir_preco()
+# Fonte para textos (interface e rastro)
+FontePequena = pygame.font.SysFont("arial", 20, bold=True)
+FonteGrande = pygame.font.SysFont("arial", 40, bold=True)
 
-        if achou_promocao:
-            print('Promoção encontrada!')
+Campo = [[0 for _ in range(Grade)] for _ in range(Grade)]
+Termino = 0
+Turno = 1
+PosG1 = [3, 0]
+PosG2 = [4, 7]
 
-        else:
-            print("Ainda caro... Checando novamente em 1 hora.")
-            time.sleep(3600)  # Pausa por 1 hora (3600 segundos)
+# Define a posição inicial no campo numérico
+Campo[PosG1[0]][PosG1[1]] = -1
+Campo[PosG2[0]][PosG2[1]] = -2
 
-#ponto de entrada com IF para poder importar parte do código em outro projeto
-if __name__ == "__main__":
-    main()
+
+def desenhar_grade():
+    #fundo
+    pygame.draw.rect(Tela, CorGrama, (EixoX, EixoY, Grade*TamSquare))
+
+#linhas verticais
+    for x in range(Grade +1):
+        StartPosition = (EixoX + x * TamSquare, EixoY)
+        EndPosition = (EixoX + x * TamSquare, EixoY + Grade * TamSquare)
+        pygame.draw.line(Tela, CorLinha, StartPosition, EndPosition, 2)
+
+#Horizontais
+    for y in range(Grade +1):
+        StartPosition = (EixoX, EixoY+  y * TamSquare)
+        EndPosition = (EixoX + Grade *TamSquare, EixoY+ y * TamSquare)
+        pygame.draw.line(Tela, CorGrama, StartPosition, EndPosition, 2)
+
+
+def desenhar_elementos():
+    for i in range(Grade):
+        for j in range(Grade):
+            CentroX = EixoX + j * TamSquare + TamSquare //   2
+            CentroY = EixoY + i * TamSquare + TamSquare // 2
+
+            valor = Campo[i][j]
+
+            #G1
+            if valor == -1:
+                pygame.draw.circle(Tela, CorG1, (CentroX, CentroY), TamSquare // 3)
+                texto = FontePequena.render("G1", True, (0, 0, 0))
+                Tela.blit(texto, (CentroX, CentroY))
