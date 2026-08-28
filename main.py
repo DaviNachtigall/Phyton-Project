@@ -1,6 +1,7 @@
 import pygame
 import sys
 
+from pygame.draw_py import draw_polygon
 
 LarguraPixel= 800
 AlturaPixel = 600
@@ -12,13 +13,17 @@ EixoX = (LarguraPixel - (Grade * TamSquare)) // 2
 EixoY = (AlturaPixel - (Grade * TamSquare)) // 2
 
 # Cores (R, G, B)
-CorFundo = (20, 20, 30)       # Azul escuro
-CorLinha = (100, 100, 120)    # Cinza para a grade
-CorGrama = (40, 60, 40)       # Verde escuro para o fundo do grid
-CorG1 = (100, 255, 100) # Verde brilhante
-CorG2 = (100, 100, 255) # Azul brilhante
-CorLixo = (150, 100, 50)      # Marrom para o rastro
-CorText = (255, 255, 255)    # Branco
+CorFundo = (60, 150, 150)
+CorLinha = (30, 60, 30)
+CorGrama = (100, 200, 100)
+CorG1 = (82, 86, 90)
+CorG2 = (106, 86, 90)
+CorLixo = (40, 70, 40)
+CorText = (255, 255, 255)
+CorFucinhoG1 = (51, 51, 51)
+CorFucinhoG2 = (70, 51, 51)
+CorBandanaG1 = (200, 40, 40)
+CorBandanaG2 = (40, 40, 200)
 
 pygame.init()
 Tela = pygame.display.set_mode((LarguraPixel, AlturaPixel))
@@ -29,11 +34,11 @@ Relogio = pygame.time.Clock()
 FontePequena = pygame.font.SysFont("arial", 20, bold=True)
 FonteGrande = pygame.font.SysFont("arial", 40, bold=True)
 
-Campo = [[0 for _ in range(Grade)] for _ in range(Grade)]
+Campo = [[0 for y in range(Grade)] for i in range(Grade)]
 Termino = 0
 Turno = 1
-PosG1 = [3, 0]
-PosG2 = [4, 7]
+PosG1 = [0, 3]
+PosG2 = [7, 4]
 
 # Define a posição inicial no campo numérico
 Campo[PosG1[0]][PosG1[1]] = -1
@@ -42,7 +47,7 @@ Campo[PosG2[0]][PosG2[1]] = -2
 
 def desenhar_grade():
     #fundo
-    pygame.draw.rect(Tela, CorGrama, (EixoX, EixoY, Grade*TamSquare))
+    pygame.draw.rect(Tela, CorGrama, (EixoX, EixoY, Grade*TamSquare, Grade*TamSquare))
 
 #linhas verticais
     for x in range(Grade +1):
@@ -54,30 +59,66 @@ def desenhar_grade():
     for y in range(Grade +1):
         StartPosition = (EixoX, EixoY+  y * TamSquare)
         EndPosition = (EixoX + Grade *TamSquare, EixoY+ y * TamSquare)
-        pygame.draw.line(Tela, CorGrama, StartPosition, EndPosition, 2)
+        pygame.draw.line(Tela, CorLinha, StartPosition, EndPosition, 2)
+
+def desenha_guaxinim(CorGuaxinin, CorFucinho, CorBandana, CentroX, CentroY, Raio):
+    OrelhaTam = Raio/2
+
+    OrelhaEsq = [
+        (CentroX - Raio * 0.6, CentroY - Raio * 0.1),  # base interna
+        (CentroX - Raio * 1.1, CentroY - Raio * 1.3),  # ponta
+        (CentroX - Raio * 0.1, CentroY - Raio * 0.9),  # base externa
+    ]
+    OrelhaDir = [
+        (CentroX + Raio * 0.6, CentroY - Raio * 0.1),
+        (CentroX + Raio * 1.1, CentroY - Raio * 1.3),
+        (CentroX + Raio * 0.1, CentroY - Raio * 0.9),
+    ]
+    Fucinho = [
+        (CentroX - Raio * 0.45, CentroY + Raio * 0.3),  # base esquerda
+        (CentroX + Raio * 0.45, CentroY + Raio * 0.3),  # base direita
+        (CentroX , CentroY + Raio * 0.9),  # ponta (embaixo)
+    ]
+
+    FaixaAltura = Raio - 6
+    RectBandana = pygame.Rect(0, 0, Raio * 2, FaixaAltura)
+    RectBandana.center = (CentroX, CentroY - 2)
+    pygame.draw.rect(Tela, CorBandana, RectBandana)
+
+    # 1º - Orelhas (atrás de tudo)
+    pygame.draw.polygon(Tela, CorGuaxinin, OrelhaEsq)
+    pygame.draw.polygon(Tela, CorGuaxinin, OrelhaDir)
+
+    # 2º - Corpo (círculo) por cima das orelhas
+    pygame.draw.circle(Tela, CorGuaxinin, (CentroX, CentroY), Raio)
+
+    # 3º - Bandana
+    pygame.draw.rect(Tela, CorBandana, RectBandana)
 
 
+    # 4º - Focinho POR ÚLTIMO (por cima do corpo e da bandana)
+    pygame.draw.polygon(Tela, CorFucinho, Fucinho)
+
+    pygame.draw.circle(Tela, (0, 0, 0), (int(CentroX), int(CentroY + Raio * 0.9)), int(Raio * 0.15))
 def desenhar_elementos():
-    for i in range(Grade):
-        for j in range(Grade):
-            CentroX = EixoX + j * TamSquare + TamSquare //  2
-            CentroY = EixoY + i * TamSquare + TamSquare // 2
+    for x in range(Grade):
+        for y in range(Grade):
+            CentroX = EixoX + x * TamSquare + TamSquare //  2
+            CentroY = EixoY + y * TamSquare + TamSquare // 2
 
-            valor = Campo[i][j]
+            valor = Campo[x][y]
 
             #G1
             if valor == -1:
-                pygame.draw.circle(Tela, CorG1, (CentroX, CentroY), TamSquare // 3)
-                texto = FontePequena.render("G1", True, (0, 0, 0))
-                Tela.blit(texto, (CentroX, CentroY))
+                desenha_guaxinim(CorG1, CorFucinhoG1, CorBandanaG1, CentroX, CentroY, TamSquare // 3)
 
-            #G2
+
+                #G2
             elif valor == -2:
-                pygame.draw.circle(Tela, CorG2, (CentroX, CentroY), TamSquare // 3)
-                texto = FontePequena.render("G2", True, (0, 0, 0))
-                Tela.blit(texto, (CentroX, CentroY))
+                desenha_guaxinim(CorG2, CorFucinhoG2, CorBandanaG2, CentroX, CentroY, TamSquare // 3)
 
-            #Lixo
+
+                #Lixo
             elif valor > 0:
                 TamanhoLixo = int((TamSquare // 2) * (valor / 20) + 5)
                 RectLixo = pygame.Rect(0, 0, TamanhoLixo, TamanhoLixo)
@@ -92,7 +133,7 @@ def desenhar_interface():
     Tela.blit(TextoTitulo, TextoTitulo.get_rect(center=(LarguraPixel // 2, 40)))
 
     if Termino == 0:
-        CorTurno = CorG1 if Turno == 1 else CorG2
+        CorTurno = CorBandanaG1 if Turno == 1 else CorBandanaG2
         TextoTurno = FontePequena.render(f"Turno: Jogador {Turno}", True, CorTurno)
         Tela.blit(TextoTurno, TextoTurno.get_rect(center=(LarguraPixel // 2, AlturaPixel - 40)))
 
@@ -110,11 +151,9 @@ def desenhar_interface():
 
     Instr1 = [
 
-        "G1 (Verde)",
+        "G1 (Vermelho)",
 
-        "W: Cima", "S: Baixo",
-
-        "A: Esq", "D: Dir",
+        "WASD do PC",
 
         "Objetivo:", "Chegar na Dir."
 
@@ -124,9 +163,7 @@ def desenhar_interface():
 
         "G2 (Azul)",
 
-        "I: Cima", "K: Baixo",
-
-        "J: Esq", "L: Dir",
+        "Seta do PC",
 
         "Objetivo:", "Chegar na Esq."
 
@@ -140,13 +177,13 @@ def desenhar_interface():
 
     for indice, linha in enumerate(Instr1):
 
-        Txt = FontePequena.render(linha, True, CorG1)
+        Txt = FontePequena.render(linha, True, CorText)
 
         Tela.blit(Txt, (20, 100 + indice * 25))
 
     for indice, linha in enumerate(Instr2):
 
-        Txt = FontePequena.render(linha, True, CorG1)
+        Txt = FontePequena.render(linha, True, CorText)
 
         Tela.blit(Txt, (LarguraPixel - 150, 100 + indice * 25))
 
@@ -178,14 +215,16 @@ def jogada(dx,dy):
 
 def renovar_lixo():
 
-    for i in range(Grade):
-        for j in range(Grade):
-            if Campo[i][j] > 0:
-                Campo[i][j] -= 1
+    for x in range(Grade):
+        for y in range(Grade):
+            if Campo[x][y] > 0:
+                Campo[x][y] -= 1
     return
 
 
 def checar_vitoria():
+    global Termino
+
     if PosG1[0] == 7:
         Termino = 1
     elif PosG2[1] == 0:
@@ -195,18 +234,23 @@ def checar_vitoria():
 
 def main():
     global Turno, Termino
-    while Termino == 0:
-        MovimentoFeito = False
-        #verifica se algum evento/condicao faz o jogo terminar
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+
+
+while Termino == 0:
+    MovimentoFeito = False
+    dx, dy = 0, 0
+
+    # verifica se algum evento/condicao faz o jogo terminar
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+
 
         if event.type == pygame.KEYDOWN and Termino == 0:
             dx, dy = 0, 0
 
-            #AWSD Tipo de jogada de G1
+            # AWSD Tipo de jogada de G1
             if Turno == 1:
                 if event.key == pygame.K_w:
                     dy = -1
@@ -217,43 +261,46 @@ def main():
                 elif event.key == pygame.K_d:
                     dx = 1
 
-            #JKIL tipo de jogada de G2
+            # JKIL tipo de jogada de G2
             elif Turno == 2:
-                if event.key == pygame.K_i:
+                if event.key == pygame.K_UP:
                     dy = -1
-                elif event.key == pygame.K_k:
+                elif event.key == pygame.K_DOWN:
                     dy = 1
-                elif event.key == pygame.K_j:
+                elif event.key == pygame.K_LEFT:
                     dx = -1
-                elif event.key == pygame.K_l:
+                elif event.key == pygame.K_RIGHT:
                     dx = 1
 
-            #atualizar variavel MovimentoFeito
+            # atualizar variavel MovimentoFeito
             if dx != 0 or dy != 0:
                 if jogada(dx, dy):
                     MovimentoFeito = True
 
-            if MovimentoFeito:
-                renovar_lixo()
-                checar_vitoria()
+
+    if MovimentoFeito:
+        renovar_lixo()
+        checar_vitoria()
+
+        if Termino == 0 and Turno == 1:
+            Turno = 2
+        else:
+            Turno = 1
+
+    # 3. Desenho render
+    Tela.fill(CorFundo)
+    desenhar_grade()
+    desenhar_elementos()
+    desenhar_interface()
+
+    # Atualiza a tela gráfica
+    pygame.display.flip()
+
+    # Mantém o jogo rodando a 60 FPS
+    Relogio.tick(60)
 
 
-            if Termino == 0 and Turno == 1: Turno = 2
-            else: Turno = 1
-
-            # 3. Desenho (Renderização)
-            Tela.fill(CorFundo)
-            desenhar_grade()
-            desenhar_elementos()
-            desenhar_interface()
-
-            # Atualiza a tela gráfica
-            pygame.display.flip()
-
-            # Mantém o jogo rodando a 60 FPS (quadros por segundo)
-            Relogio.tick(60)
-
-    if __name__ == "__main__":
-        main()
+if __name__ == "__main__":
+    main()
 
 
