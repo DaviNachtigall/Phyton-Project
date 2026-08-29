@@ -6,7 +6,7 @@ from pygame.draw_py import draw_polygon
 LarguraPixel= 800
 AlturaPixel = 600
 Grade = 8
-TamSquare = 60 # Tamanho de cada célula do tabuleiro
+TamSquare = 60 #
 
 # Centraliza o tabuleiro na tela
 EixoX = (LarguraPixel - (Grade * TamSquare)) // 2
@@ -30,7 +30,7 @@ Tela = pygame.display.set_mode((LarguraPixel, AlturaPixel))
 pygame.display.set_caption("Corrida Guaxinim - G1 vs G2")
 Relogio = pygame.time.Clock()
 
-# Fonte para textos (interface e rastro)
+
 FontePequena = pygame.font.SysFont("arial", 20, bold=True)
 FonteGrande = pygame.font.SysFont("arial", 40, bold=True)
 
@@ -87,21 +87,21 @@ def desenha_guaxinim(CorGuaxinin, CorFucinho, CorBandana, CentroX, CentroY, Raio
     RectBandana.center = (CentroX, CentroY - 2)
     pygame.draw.rect(Tela, CorBandana, RectBandana)
 
-    # 1º - Orelhas
+    # Orelhas
     pygame.draw.polygon(Tela, CorGuaxinin, OrelhaEsq)
     pygame.draw.polygon(Tela, CorGuaxinin, OrelhaDir)
 
-    # 2º - Corpo
+    # Corpo
     pygame.draw.circle(Tela, CorGuaxinin, (CentroX, CentroY), Raio)
 
     # Bandana
     pygame.draw.rect(Tela, CorBandana, RectBandana)
 
 
-    #Focinho
+    # Focinho
     pygame.draw.polygon(Tela, CorFucinho, Fucinho)
 
-    #olhos
+    # Olhos
     pygame.draw.circle(Tela, (0, 0, 0), (int(CentroX), int(CentroY + Raio * 0.9)), int(Raio * 0.15))
 
     pygame.draw.circle(Tela, CorText, (int(CentroX+8), int(CentroY-2)), int(Raio * 0.25))
@@ -258,7 +258,7 @@ def jogada(dx,dy):
 
     else:
         Campo[PosAtual[0]][PosAtual[1]] = 20  # Deixa lixo
-        # Atualiza posicao
+        # Atualiza
         Campo[PosNovaX][PosNovaY] = GuaxininNum
 
         if(GuaxininNum == -1):
