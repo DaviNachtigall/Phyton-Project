@@ -39,6 +39,8 @@ Termino = 0
 Turno = 1
 PosG1 = [0, 3]
 PosG2 = [7, 4]
+InvalidezG1 = 0;
+InvalidezG2 = 0;
 
 # Define a posição inicial no campo numérico
 Campo[PosG1[0]][PosG1[1]] = -1
@@ -85,21 +87,31 @@ def desenha_guaxinim(CorGuaxinin, CorFucinho, CorBandana, CentroX, CentroY, Raio
     RectBandana.center = (CentroX, CentroY - 2)
     pygame.draw.rect(Tela, CorBandana, RectBandana)
 
-    # 1º - Orelhas (atrás de tudo)
+    # 1º - Orelhas
     pygame.draw.polygon(Tela, CorGuaxinin, OrelhaEsq)
     pygame.draw.polygon(Tela, CorGuaxinin, OrelhaDir)
 
-    # 2º - Corpo (círculo) por cima das orelhas
+    # 2º - Corpo
     pygame.draw.circle(Tela, CorGuaxinin, (CentroX, CentroY), Raio)
 
-    # 3º - Bandana
+    # Bandana
     pygame.draw.rect(Tela, CorBandana, RectBandana)
 
 
-    # 4º - Focinho POR ÚLTIMO (por cima do corpo e da bandana)
+    #Focinho
     pygame.draw.polygon(Tela, CorFucinho, Fucinho)
 
+    #olhos
     pygame.draw.circle(Tela, (0, 0, 0), (int(CentroX), int(CentroY + Raio * 0.9)), int(Raio * 0.15))
+
+    pygame.draw.circle(Tela, CorText, (int(CentroX+8), int(CentroY-2)), int(Raio * 0.25))
+
+    pygame.draw.circle(Tela, CorText, (int(CentroX - 8), int(CentroY - 2)), int(Raio * 0.25))
+
+    pygame.draw.circle(Tela, (0,0,0), (int(CentroX + 8), int(CentroY - 2)), int(Raio * 0.15))
+
+    pygame.draw.circle(Tela, (0,0,0), (int(CentroX - 8), int(CentroY - 2)), int(Raio * 0.15))
+
 def desenhar_elementos():
     for x in range(Grade):
         for y in range(Grade):
@@ -132,20 +144,33 @@ def desenhar_interface():
     TextoTitulo = FonteGrande.render("CORRIDA GUAXINIM", True, CorText)
     Tela.blit(TextoTitulo, TextoTitulo.get_rect(center=(LarguraPixel // 2, 40)))
 
+
     if Termino == 0:
-        CorTurno = CorBandanaG1 if Turno == 1 else CorBandanaG2
-        TextoTurno = FontePequena.render(f"Turno: Jogador {Turno}", True, CorTurno)
-        Tela.blit(TextoTurno, TextoTurno.get_rect(center=(LarguraPixel // 2, AlturaPixel - 40)))
+        if Turno == 1 and InvalidezG1 == 1:
+            TextoInvalidez = FonteGrande.render("G1 sem movimento válido!!", True, CorBandanaG1)
+            Tela.blit(TextoInvalidez, TextoInvalidez.get_rect(center=(LarguraPixel // 2, AlturaPixel - 40)))
+
+        elif Turno == 2 and InvalidezG2 == 1:
+            TextoInvalidez = FonteGrande.render("G2 sem movimento válido!!", True, CorBandanaG2)
+            Tela.blit(TextoInvalidez, TextoInvalidez.get_rect(center=(LarguraPixel // 2, AlturaPixel - 40)))
+
+        else:
+            CorTurno = CorBandanaG1 if Turno == 1 else CorBandanaG2
+            TextoTurno = FontePequena.render(f"Turno: Jogador {Turno}", True, CorTurno)
+            Tela.blit(TextoTurno, TextoTurno.get_rect(center=(LarguraPixel // 2, AlturaPixel - 40)))
 
     else:
         if Termino == 1:
-            CorTermino = CorG1
+            CorTermino = CorBandanaG1
             TextoVitoria = FonteGrande.render("Guaxinim 1 venceu!!", True, CorTermino)
             Tela.blit(TextoVitoria, TextoVitoria.get_rect(center=(LarguraPixel // 2, AlturaPixel - 40)))
+
+
         else:
-            CorTermino = CorG2
+            CorTermino = CorBandanaG2
             TextoVitoria = FonteGrande.render("Guaxinim 2 venceu!!", True, CorTermino)
             Tela.blit(TextoVitoria, TextoVitoria.get_rect(center=(LarguraPixel // 2, AlturaPixel - 40)))
+
 
     # Instruções laterais
 
@@ -153,7 +178,7 @@ def desenhar_interface():
 
         "G1 (Vermelho)",
 
-        "WASD do PC",
+        "Movimento:","AWSD",
 
         "Objetivo:", "Chegar na Dir."
 
@@ -163,7 +188,7 @@ def desenhar_interface():
 
         "G2 (Azul)",
 
-        "Seta do PC",
+        "Movimento:","SETAS",
 
         "Objetivo:", "Chegar na Esq."
 
@@ -187,12 +212,42 @@ def desenhar_interface():
 
         Tela.blit(Txt, (LarguraPixel - 150, 100 + indice * 25))
 
+def esta_bloqueado(Posicao, GuaxininNum):
+    global InvalidezG1, InvalidezG2
+
+    Direcoes = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+
+    for dx, dy in Direcoes:
+        NovoX = Posicao[0] + dx
+        NovoY = Posicao[1] + dy
+
+        # Se pelo menos uma direção é válida, não está bloqueado
+        if 0 <= NovoX <= 7 and 0 <= NovoY <= 7 and Campo[NovoX][NovoY] == 0:
+            if(GuaxininNum) == -1:
+                InvalidezG1 = 0
+            else:
+                InvalidezG2 = 0
+
+            return False
+
+    if (GuaxininNum) == -1:
+        InvalidezG1 = 1
+    else:
+        InvalidezG2 = 1
+
+    return True
+
+
+
 def jogada(dx,dy):
     global PosG1, PosG2, Turno
 
     GuaxininNum = -1 if Turno == 1 else -2
 
     PosAtual = PosG1 if Turno == 1 else PosG2
+
+    if esta_bloqueado(PosAtual, GuaxininNum):
+        return -3
 
     PosNovaX = PosAtual[0] + dx
     PosNovaY = PosAtual[1] + dy
@@ -227,13 +282,13 @@ def checar_vitoria():
 
     if PosG1[0] == 7:
         Termino = 1
-    elif PosG2[1] == 0:
+    elif PosG2[0] == 0:
         Termino = 2
     else:
         return
 
 def main():
-    global Turno, Termino
+    global Turno, Termino, InvalidezG1, InvalidezG2
 
 
 while Termino == 0:
@@ -251,7 +306,10 @@ while Termino == 0:
             dx, dy = 0, 0
 
             # AWSD Tipo de jogada de G1
-            if Turno == 1:
+
+
+            if Turno == 1 and jogada(dx, dy) != -3:
+                InvalidezG1 = 0
                 if event.key == pygame.K_w:
                     dy = -1
                 elif event.key == pygame.K_s:
@@ -262,7 +320,8 @@ while Termino == 0:
                     dx = 1
 
             # JKIL tipo de jogada de G2
-            elif Turno == 2:
+            elif Turno == 2 and jogada(dx, dy) != -3:
+                InvalidezG2 = 0
                 if event.key == pygame.K_UP:
                     dy = -1
                 elif event.key == pygame.K_DOWN:
@@ -274,32 +333,39 @@ while Termino == 0:
 
             # atualizar variavel MovimentoFeito
             if dx != 0 or dy != 0:
-                if jogada(dx, dy):
+                if jogada(dx, dy) != False:
                     MovimentoFeito = True
+
+            elif Turno == 2 and InvalidezG2 == 1:
+                MovimentoFeito = True
+
+            elif Turno == 1 and InvalidezG1 == 1:
+                MovimentoFeito = True
 
 
     if MovimentoFeito:
         renovar_lixo()
         checar_vitoria()
-
         if Termino == 0 and Turno == 1:
             Turno = 2
         else:
             Turno = 1
 
-    # 3. Desenho render
+
     Tela.fill(CorFundo)
     desenhar_grade()
     desenhar_elementos()
     desenhar_interface()
-
     # Atualiza a tela gráfica
     pygame.display.flip()
 
-    # Mantém o jogo rodando a 60 FPS
+
     Relogio.tick(60)
 
 
+
+
+pygame.time.wait(10000)
 if __name__ == "__main__":
     main()
 
