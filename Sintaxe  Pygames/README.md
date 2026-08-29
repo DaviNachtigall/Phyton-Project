@@ -180,7 +180,7 @@ Indica o tipo do evento. Os dois usados no jogo:
 - `pygame.QUIT` → o jogador clicou no X da janela
 - `pygame.KEYDOWN` → uma tecla foi pressionada
 
-⚠️ **Importante**: `event.key` só existe em eventos do tipo `KEYDOWN` (ou
+ **Importante**: `event.key` só existe em eventos do tipo `KEYDOWN` (ou
 `KEYUP`). Tentar ler `event.key` em outro tipo de evento (como `QUIT` ou
 movimento do mouse) causa `AttributeError` — por isso todo código que lê
 `event.key` precisa estar dentro de um `if event.type == pygame.KEYDOWN:`.
